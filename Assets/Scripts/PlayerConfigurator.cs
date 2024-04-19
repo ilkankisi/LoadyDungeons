@@ -13,21 +13,30 @@ public class PlayerConfigurator : MonoBehaviour
 
     [SerializeField] private string m_Address;
     // [SerializeField] private AssetReference m_HatAssetReference;
-    [SerializeField] private AssetReferenceGameObject m_HatAssetReference;
+    // [SerializeField] private AssetReferenceGameObject m_HatAssetReference;
+    private GameObject m_HatInstance;
 
     void Start()
     {
-        SetHat();
+        // SetHat();
+        LoadInRandomHat();
     }
+    private void LoadInRandomHat()
+    {
+        int randomIndex = Random.Range(0, 6);
+        string hatAddress = string.Format("Hat{0:00}", randomIndex);
 
+        m_HatLoadOpHandle = Addressables.LoadAssetAsync<GameObject>(hatAddress);
+        m_HatLoadOpHandle.Completed += OnHatLoadComplete;
+    }
     public void SetHat()
     {
         // m_HatLoadOpHandle = Addressables.LoadAssetAsync<GameObject>(m_Address);
-        if (!m_HatAssetReference.RuntimeKeyIsValid())
-            return;
+        // if (!m_HatAssetReference.RuntimeKeyIsValid())
+        //     return;
 
-        m_HatLoadOpHandle = m_HatAssetReference.LoadAssetAsync<GameObject>();
-        m_HatLoadOpHandle.Completed += OnHatLoadComplete;
+        // m_HatLoadOpHandle = m_HatAssetReference.LoadAssetAsync<GameObject>();
+        // m_HatLoadOpHandle.Completed += OnHatLoadComplete;
     }
     private void OnDisable()
     {
@@ -37,7 +46,21 @@ public class PlayerConfigurator : MonoBehaviour
     {
         if (asyncOperationHandle.Status == AsyncOperationStatus.Succeeded)
         {
-            Instantiate(asyncOperationHandle.Result, m_HatAnchor);
+            // Instantiate(asyncOperationHandle.Result, m_HatAnchor);
+            m_HatInstance = Instantiate(asyncOperationHandle.Result, m_HatAnchor);
+        }
+    }
+    /// <summary>
+    /// Update is called every frame, if the MonoBehaviour is enabled.
+    /// </summary>
+    void Update()
+    {
+        if (Input.GetMouseButtonUp(1))
+        {
+            Destroy(m_HatInstance);
+            Addressables.ReleaseInstance(m_HatLoadOpHandle);
+
+            LoadInRandomHat();
         }
     }
 }
